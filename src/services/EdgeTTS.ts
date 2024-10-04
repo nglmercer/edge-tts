@@ -20,7 +20,7 @@ export class EdgeTTS {
 
     private generateUUID(): string {
         // generate a random UUID not using lib
-        return  'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        return 'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             const r = Math.random() * 16 | 0;
             const v = c === 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
@@ -94,38 +94,41 @@ export class EdgeTTS {
     private processAudioData(data: any): void {
         if (Buffer.isBuffer(data)) {
             const needle = Buffer.from("Path:audio\r\n");
-            
+
             // Convierte `data` a `Uint8Array` para usar `indexOf`
             const uint8Data = new Uint8Array(data);
             const start_ind = uint8Data.indexOf(needle[0]); // Cambia a uint8Data
-    
+
             if (start_ind !== -1) {
                 const audioData = data.subarray(start_ind + needle.length);
                 this.audio_stream.push(audioData);
             }
-    
+
             // Comprobar si el dato contiene el marcador de fin
             if (data.includes("Path:turn.end")) {
                 this.ws.close();
             }
         }
     }
-    
-    
+
+
 
     async toFile(outputPath: string): Promise<void> {
         if (this.audio_stream.length) {
             const audioBuffer = Buffer.concat(this.audio_stream);
-            const uint8Array = new Uint8Array(audioBuffer); // Convertir Buffer a Uint8Array
-            writeFileSync(outputPath, uint8Array);
+            const uint8Array = new Uint8Array(audioBuffer);
+            writeFileSync(`${outputPath}.${this.audio_format}`, uint8Array);
         } else {
             throw new Error("No audio data available to save.");
         }
     }
-    
-    toRaw(): Uint8Array {
-        const audioBuffer = Buffer.concat(this.audio_stream);
-        return new Uint8Array(audioBuffer);
+
+    async toRaw(): Promise<Buffer | Uint8Array> {
+        if (this.audio_stream.length === 0) {
+            throw new Error("No audio data available.");
+        }
+        
+        return Buffer.concat(this.audio_stream);
     }
 
     toBase64(): string {
