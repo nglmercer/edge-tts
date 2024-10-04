@@ -1,18 +1,29 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "module": "commonjs",
-    "experimentalDecorators": true,
-    "allowJs": false,
-    "checkJs": false,
-    "outDir": "lib",
-    "strict": false,
-    "strictNullChecks": true,
+    // Enable latest features
+    "lib": ["ESNext", "DOM"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "allowJs": true,
+
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true, // No emitirá archivos .js
+
+    // Best practices
+    "strict": true,
     "skipLibCheck": true,
-    "noImplicitThis": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true
-  }
+    "noFallthroughCasesInSwitch": true,
+
+    // Some stricter flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"] // Excluye dist para evitar emitir archivos
 }
