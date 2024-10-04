@@ -1,5 +1,6 @@
 import WebSocket from 'ws';
 import { Constants } from '../config/constants';
+import { writeFileSync } from 'fs';
 
 export class EdgeTTS {
     private audio_stream: any[] = [];
@@ -116,7 +117,7 @@ export class EdgeTTS {
         if (this.audio_stream.length) {
             const audioBuffer = Buffer.concat(this.audio_stream);
             const uint8Array = new Uint8Array(audioBuffer); // Convertir Buffer a Uint8Array
-            await Bun.write(`${outputPath}.${this.audio_format}`, uint8Array); // Usar el Uint8Array
+            writeFileSync(outputPath, uint8Array);
         } else {
             throw new Error("No audio data available to save.");
         }
