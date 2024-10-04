@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "bun build src/**/*.ts --outdir dist --target=bun",
+    "build": "bun build src/**/*.ts --outdir dist --target=node",
     "build:bin": "bun scripts/build.ts"
   },
   "devDependencies": {
