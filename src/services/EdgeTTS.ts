@@ -120,12 +120,13 @@ export class EdgeTTS {
         }
     }
 
-    async toRaw(): Promise<Buffer | Uint8Array> {
+    toRaw(): string {
         if (this.audio_stream.length === 0) {
             throw new Error("No audio data available.");
         }
 
-        return Buffer.concat(this.audio_stream);
+        const audioBuffer = Buffer.concat(this.audio_stream);
+        return audioBuffer.toString('base64');
     }
 
     toBase64(): string {
