@@ -37,7 +37,7 @@ bun install --global edge-tts
 
 To synthesize speech from text, use the following command:
 ```bash
-edge-tts synthesize -t "Hello, world!" -o output
+edge-tts synthesize -t "Hello, world!" -o hello_world_audio
 ```
 
 To list available voices, run:
@@ -50,7 +50,7 @@ Integration into Your Project
 To use Edge TTS in your Bun project, you can import it like this:
 
 ```js
-import { EdgeTTS } from '@andresaya/edge-tt';
+import { EdgeTTS } from '@andresaya/edge-tts';
 
 // Initialize the EdgeTTS service
 const tts = new EdgeTTS();
@@ -68,7 +68,7 @@ await tts.synthesize("Hello, world!", 'en-US-AriaNeural', {
 
 // Export synthesized audio in different formats
 tts.toBase64();   // Get audio as base64
-await tts.toFile("output.wav");       // Save audio to file
+await tts.toFile("output_audio");       // Save audio to file
 await tts.toRaw();         // Get raw audio buffer
 ```
 
@@ -79,8 +79,9 @@ After synthesizing speech, you can export the audio in various formats:
 - `toFile`: Saves the audio to a specified file (e.g., "output.wav").
 - `toRaw`: Returns the raw audio stream.
 
-## Contributing
-We welcome contributions! Please read our CONTRIBUTING.md for guidelines on how to contribute to this project.
+## PHP Version
+If you want to use Edge TTS with PHP, you can check out the PHP version of this package, [Edge TTS PHP](https://github.com/andresayac/edge-tts-php)
+
 
 ## License
 This project is licensed under the GNU General Public License v3 (GPLv3).
