@@ -67,9 +67,9 @@ await tts.synthesize("Hello, world!", 'en-US-AriaNeural', {
 });
 
 // Export synthesized audio in different formats
-const base64Audio = tts.toBase64();   // Get audio as base64
+tts.toBase64();   // Get audio as base64
 await tts.toFile("output.wav");       // Save audio to file
-const rawAudio = tts.toRaw();         // Get raw audio stream
+await tts.toRaw();         // Get raw audio buffer
 ```
 
 ## Export Options

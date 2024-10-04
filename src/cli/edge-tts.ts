@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { SynthesizeCommand } from '../commands/SynthesizeCommand';
 import { VoiceListCommand } from '../commands/VoiceListCommand';
 import { Command } from 'commander';
