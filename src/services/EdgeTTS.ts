@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 import { Constants } from '../config/constants';
 
@@ -15,6 +14,15 @@ export class EdgeTTS {
             delete voice.SuggestedCodec;
             delete voice.Status;
             return voice;
+        });
+    }
+
+    private generateUUID(): string {
+        // generate a random UUID not using lib
+        return  'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
         });
     }
 
@@ -41,7 +49,7 @@ export class EdgeTTS {
 
     async synthesize(text: string, voice: string = 'en-US-AnaNeural', options: any = {}): Promise<void> {
         return new Promise((resolve, reject) => {
-            const req_id = uuidv4();
+            const req_id = this.generateUUID();
             this.ws = new WebSocket(`${Constants.WSS_URL}?trustedclienttoken=${Constants.TRUSTED_CLIENT_TOKEN}&ConnectionId=${req_id}`);
 
             const SSML_text = this.getSSML(text, voice, options);

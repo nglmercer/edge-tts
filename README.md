@@ -1,15 +1,94 @@
-# edge-tts-node
+# Edge TTS
 
-To install dependencies:
+**Edge TTS** is a powerful Text-to-Speech (TTS) package that leverages Microsoft's Edge capabilities. This package allows you to synthesize speech from text and manage voice options easily through a command-line interface (CLI).
+
+## Features
+
+- **Text-to-Speech**: Convert text into natural-sounding speech using Microsoft Edge's TTS capabilities.
+- **Multiple Voices**: Access a variety of voices to suit your project's needs.
+- **Audio Export Options**: Export synthesized audio in different formats (raw, base64, or directly to a file).
+- **Command-Line Interface**: Use a simple CLI for easy access to functionality.
+- **Easy Integration**: Modular structure allows for easy inclusion in existing projects.
+
+## Installation
+
+You can install Edge TTS via npm. Run the following command in your terminal:
 
 ```bash
-bun install
+bun add @andresaya/edge-tts
+```
+```bash
+npm install @andresaya/edge-tts
 ```
 
-To run:
+
+## Usage
+Command-Line Interface
+
+You can install Edge TTS via npm. bun  Run the following command in your terminal:
 
 ```bash
-bun run src/index.ts
+npm install -g @andresaya/edge-tts
 ```
 
-This project was created using `bun init` in bun v1.1.0. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+```bash
+bun install --global edge-tts
+```
+
+To synthesize speech from text, use the following command:
+```bash
+edge-tts synthesize -t "Hello, world!" -o output
+```
+
+To list available voices, run:
+
+```bash
+edge-tts voice-list
+```
+
+Integration into Your Project
+To use Edge TTS in your Bun project, you can import it like this:
+
+```js
+import { EdgeTTS } from '@andresaya/edge-tt';
+
+// Initialize the EdgeTTS service
+const tts = new EdgeTTS();
+
+// Get voices
+const voices = await tts.getVoices();  
+console.log(voices);  // Display available voices
+
+// Synthesize text with options for voice, rate, volume, and pitch
+await tts.synthesize("Hello, world!", 'en-US-AriaNeural', {
+    rate: '0%',       // Speech rate (range: -100% to 100%)
+    volume: '0%',     // Speech volume (range: -100% to 100%)
+    pitch: '0Hz'      // Voice pitch (range: -100Hz to 100Hz)
+});
+
+// Export synthesized audio in different formats
+const base64Audio = tts.toBase64();   // Get audio as base64
+await tts.toFile("output.wav");       // Save audio to file
+const rawAudio = tts.toRaw();         // Get raw audio stream
+```
+
+## Export Options
+After synthesizing speech, you can export the audio in various formats:
+
+- `toBase64`: Returns the audio as a Base64 string.
+- `toFile`: Saves the audio to a specified file (e.g., "output.wav").
+- `toRaw`: Returns the raw audio stream.
+
+## Contributing
+We welcome contributions! Please read our CONTRIBUTING.md for guidelines on how to contribute to this project.
+
+## License
+This project is licensed under the GNU General Public License v3 (GPLv3).
+
+## Acknowledgments
+
+We would like to extend our gratitude to the developers and contributors of the following projects for their inspiration and groundwork:
+
+* https://github.com/rany2/edge-tts/tree/master/examples
+* https://github.com/rany2/edge-tts/blob/master/src/edge_tts/util.py
+* https://github.com/hasscc/hass-edge-tts/blob/main/custom_components/edge_tts/tts.py
