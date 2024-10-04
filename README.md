@@ -31,10 +31,6 @@ You can install Edge TTS via npm. bun  Run the following command in your termina
 npm install -g @andresaya/edge-tts
 ```
 
-```bash
-bun install --global edge-tts
-```
-
 To synthesize speech from text, use the following command:
 ```bash
 edge-tts synthesize -t "Hello, world!" -o hello_world_audio
