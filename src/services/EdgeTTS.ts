@@ -122,6 +122,11 @@ export class EdgeTTS {
             throw new Error("No audio data available to save.");
         }
     }
+    
+    toRaw(): Uint8Array {
+        const audioBuffer = Buffer.concat(this.audio_stream);
+        return new Uint8Array(audioBuffer);
+    }
 
     toBase64(): string {
         const audioBuffer = Buffer.concat(this.audio_stream);
