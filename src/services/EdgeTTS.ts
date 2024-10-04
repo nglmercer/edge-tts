@@ -19,7 +19,6 @@ export class EdgeTTS {
     }
 
     private generateUUID(): string {
-        // generate a random UUID not using lib
         return 'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             const r = Math.random() * 16 | 0;
             const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -95,16 +94,14 @@ export class EdgeTTS {
         if (Buffer.isBuffer(data)) {
             const needle = Buffer.from("Path:audio\r\n");
 
-            // Convierte `data` a `Uint8Array` para usar `indexOf`
             const uint8Data = new Uint8Array(data);
-            const start_ind = uint8Data.indexOf(needle[0]); // Cambia a uint8Data
+            const start_ind = uint8Data.indexOf(needle[0]);
 
             if (start_ind !== -1) {
                 const audioData = data.subarray(start_ind + needle.length);
                 this.audio_stream.push(audioData);
             }
 
-            // Comprobar si el dato contiene el marcador de fin
             if (data.includes("Path:turn.end")) {
                 this.ws.close();
             }
@@ -127,7 +124,7 @@ export class EdgeTTS {
         if (this.audio_stream.length === 0) {
             throw new Error("No audio data available.");
         }
-        
+
         return Buffer.concat(this.audio_stream);
     }
 
