@@ -1,12 +1,11 @@
 {
   "name": "@andresaya/edge-tts",
   "version": "1.2.0",
-  "module": "dist/index.js",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "type": "module",
+
+
   "scripts": {
-    "build": "bun build src/**/*.ts --outdir dist --target=node",
+    "build": "tsc",
     "build:bin": "bun scripts/build.ts"
   },
   "devDependencies": {

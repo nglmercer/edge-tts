@@ -25,5 +25,5 @@
     "noPropertyAccessFromIndexSignature": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"] // Excluye dist para evitar emitir archivos
+  "exclude": ["node_modules", "dist"]
 }
