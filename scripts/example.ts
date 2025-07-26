@@ -82,11 +82,12 @@ async function testVolumeValidation(tts: EdgeTTS) {
     { value: 50, expected: '50%', description: 'Volume número válido' },
     { value: '100%', expected: '100%', description: 'Volume string válido' },
     { value: 150, expected: '150%', description: 'Volume mayor a 100%' },
+    { value: -100, expected: '-100%', description: 'Volume negativo' },
   ];
 
   const invalidVolumeTests = [
-    { value: -10, description: 'Volume número negativo' },
-    { value: '-20%', description: 'Volume string negativo' },
+    { value: -110, description: 'Volume número negativo mayor a -100%' },
+    { value: '-120%', description: 'Volume string negativo mayor a -100%' },
   ];
 
   // Tests válidos
