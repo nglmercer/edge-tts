@@ -1,7 +1,8 @@
-import WebSocket,{type RawData }  from 'ws'; // Importar Buffer explícitamente para claridad
+import WebSocket, { type RawData } from 'ws';
 import { Constants } from '../config/constants';
 import { writeFile } from 'fs/promises';
 import { Buffer } from 'buffer';
+
 export interface Voice {
     Name: string;
     ShortName: string;
@@ -15,6 +16,7 @@ export interface SynthesisOptions {
     rate?: string | number;
     volume?: string | number;
 }
+
 function ensureBuffer(data: RawData): Buffer {
     if (Buffer.isBuffer(data)) {
         return data;
@@ -30,6 +32,7 @@ function ensureBuffer(data: RawData): Buffer {
     }
     throw new Error(`Unsupported RawData type: ${typeof data}`);
 }
+
 export class EdgeTTS {
     private audio_stream: Uint8Array[] = [];
     private audio_format: string = 'mp3';
@@ -91,7 +94,7 @@ export class EdgeTTS {
         if (volumeValue < -100 || volumeValue > 100) {
             throw new Error("Volume cannot be negative. Expected a value from -100% to 100% (or more).");
         }
-        
+
         return `${volumeValue}%`;
     }
     async synthesize(text: string, voice: string = 'en-US-AnaNeural', options: SynthesisOptions = {}): Promise<void> {
@@ -119,14 +122,14 @@ export class EdgeTTS {
                 this.processAudioData(data);
             });
 
-            this.ws.on('error', (err) => {
+            this.ws.on('error', (err: any) => {
                 clearTimeout(timeout);
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                     this.ws.close();
                 }
                 reject(err);
             });
-            
+
             this.ws.on('close', () => {
                 clearTimeout(timeout);
                 resolve();
@@ -138,7 +141,7 @@ export class EdgeTTS {
         if (typeof options.pitch === 'string') {
             options.pitch = options.pitch.replace('hz', 'Hz');
         }
-        
+
         const pitch = this.validatePitch(options.pitch ?? 0);
         const rate = this.validateRate(options.rate ?? 0);
         const volume = this.validateVolume(options.volume ?? 0);
@@ -155,7 +158,7 @@ export class EdgeTTS {
         const needle = Buffer.from("Path:audio\r\n");
 
         const audioStartIndex = buffer.indexOf(new Uint8Array(needle));
-        
+
         if (audioStartIndex !== -1) {
             const audioChunk = buffer.subarray(audioStartIndex + needle.length);
             this.audio_stream.push(new Uint8Array(audioChunk));
@@ -168,10 +171,10 @@ export class EdgeTTS {
 
 
     async toFile(outputPath: string): Promise<string> {
-        const audioBuffer = this.toBuffer(); 
+        const audioBuffer = this.toBuffer();
         const finalPath = `${outputPath}.${this.audio_format}`;
-        await writeFile(finalPath, new Uint8Array(audioBuffer)); 
-        
+        await writeFile(finalPath, new Uint8Array(audioBuffer));
+
         return finalPath;
     }
 

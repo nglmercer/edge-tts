@@ -1,10 +1,9 @@
-// example.ts
 import { EdgeTTS, type Voice } from '../src/services/EdgeTTS';
 import { mkdir, access } from 'fs/promises';
 import { join } from 'path';
 
 /**
- * Utilidad para colorear la salida de consola
+ * Utility to color console output
  */
 const colors = {
   reset: '\x1b[0m',
@@ -22,18 +21,18 @@ function log(message: string, color: keyof typeof colors = 'reset') {
 }
 
 /**
- * Test de validaciones de pitch
+ * Pitch validation tests
  */
 async function testPitchValidation(tts: EdgeTTS) {
-  log('\n🧪 Probando validaciones de PITCH...', 'cyan');
-  
+  log('\n🧪 Testing PITCH validations...', 'cyan');
+
   const pitchTests = [
-    { value: 0, expected: '+0Hz', description: 'Pitch número 0' },
-    { value: 50, expected: '+50Hz', description: 'Pitch número positivo' },
-    { value: -30, expected: '-30Hz', description: 'Pitch número negativo' },
-    { value: '+25Hz', expected: '+25Hz', description: 'Pitch string positivo' },
-    { value: '-45Hz', expected: '-45Hz', description: 'Pitch string negativo' },
-    { value: '12.5Hz', expected: '12.5Hz', description: 'Pitch decimal' },
+    { value: 0, expected: '+0Hz', description: 'Pitch number 0' },
+    { value: 50, expected: '+50Hz', description: 'Positive pitch number' },
+    { value: -30, expected: '-30Hz', description: 'Negative pitch number' },
+    { value: '+25Hz', expected: '+25Hz', description: 'Positive pitch string' },
+    { value: '-45Hz', expected: '-45Hz', description: 'Negative pitch string' },
+    { value: '12.5Hz', expected: '12.5Hz', description: 'Decimal pitch' },
   ];
 
   for (const test of pitchTests) {
@@ -47,18 +46,18 @@ async function testPitchValidation(tts: EdgeTTS) {
 }
 
 /**
- * Test de validaciones de rate
+ * Rate validation tests
  */
 async function testRateValidation(tts: EdgeTTS) {
-  log('\n🧪 Probando validaciones de RATE...', 'cyan');
-  
+  log('\n🧪 Testing RATE validations...', 'cyan');
+
   const rateTests = [
-    { value: 0, expected: '+0%', description: 'Rate número 0' },
-    { value: 50, expected: '+50%', description: 'Rate número positivo' },
-    { value: -20, expected: '-20%', description: 'Rate número negativo' },
-    { value: '100%', expected: '+100%', description: 'Rate string positivo' },
-    { value: '-25%', expected: '-25%', description: 'Rate string negativo' },
-    { value: '150.5%', expected: '+150.5%', description: 'Rate decimal' },
+    { value: 0, expected: '+0%', description: 'Rate number 0' },
+    { value: 50, expected: '+50%', description: 'Positive rate number' },
+    { value: -20, expected: '-20%', description: 'Negative rate number' },
+    { value: '100%', expected: '+100%', description: 'Positive rate string' },
+    { value: '-25%', expected: '-25%', description: 'Negative rate string' },
+    { value: '150.5%', expected: '+150.5%', description: 'Decimal rate' },
   ];
 
   for (const test of rateTests) {
@@ -72,25 +71,25 @@ async function testRateValidation(tts: EdgeTTS) {
 }
 
 /**
- * Test de validaciones de volume
+ * Volume validation tests
  */
 async function testVolumeValidation(tts: EdgeTTS) {
-  log('\n🧪 Probando validaciones de VOLUME...', 'cyan');
-  
+  log('\n🧪 Testing VOLUME validations...', 'cyan');
+
   const volumeTests = [
-    { value: 0, expected: '0%', description: 'Volume número 0' },
-    { value: 50, expected: '50%', description: 'Volume número válido' },
-    { value: '100%', expected: '100%', description: 'Volume string válido' },
-    { value: 150, expected: '150%', description: 'Volume mayor a 100%' },
-    { value: -100, expected: '-100%', description: 'Volume negativo' },
+    { value: 0, expected: '0%', description: 'Volume number 0' },
+    { value: 50, expected: '50%', description: 'Valid volume number' },
+    { value: '100%', expected: '100%', description: 'Valid volume string' },
+    { value: 150, expected: '150%', description: 'Volume greater than 100%' },
+    { value: -100, expected: '-100%', description: 'Negative volume' },
   ];
 
   const invalidVolumeTests = [
-    { value: -110, description: 'Volume número negativo mayor a -100%' },
-    { value: '-120%', description: 'Volume string negativo mayor a -100%' },
+    { value: -110, description: 'Volume number lower than -100%' },
+    { value: '-120%', description: 'Negative volume string lower than -100%' },
   ];
 
-  // Tests válidos
+  // Valid tests
   for (const test of volumeTests) {
     try {
       await tts.synthesize('Test volume', 'en-US-AnaNeural', { volume: test.value });
@@ -100,245 +99,240 @@ async function testVolumeValidation(tts: EdgeTTS) {
     }
   }
 
-  // Tests que deben fallar
+  // Tests that should fail
   for (const test of invalidVolumeTests) {
     try {
       await tts.synthesize('Test volume', 'en-US-AnaNeural', { volume: test.value });
-      log(`  ❌ ${test.description}: Debería haber fallado pero no lo hizo`, 'red');
+      log(`  ❌ ${test.description}: Should have failed but didn't`, 'red');
     } catch (error) {
-      log(`  ✅ ${test.description}: Correctamente rechazado - ${error instanceof Error ? error.message : error}`, 'green');
+      log(`  ✅ ${test.description}: Correctly rejected - ${error instanceof Error ? error.message : error}`, 'green');
     }
   }
 }
 
 /**
- * Test de síntesis con diferentes combinaciones
+ * Synthesis tests with different combinations
  */
 async function testSynthesisCombinations(tts: EdgeTTS, outputDir: string) {
-  log('\n🧪 Probando combinaciones de síntesis...', 'cyan');
-  
+  log('\n🧪 Testing synthesis combinations...', 'cyan');
+
   const combinations = [
     {
       name: 'basic_english',
       text: 'Hello world, this is a basic test.',
       voice: 'en-US-AnaNeural',
       options: {},
-      description: 'Síntesis básica sin opciones'
+      description: 'Basic synthesis without options'
     },
     {
       name: 'modified_pitch',
       text: 'This text has a modified pitch.',
       voice: 'en-US-AnaNeural',
       options: { pitch: '+50Hz' },
-      description: 'Solo pitch modificado'
+      description: 'Only pitch modified'
     },
     {
       name: 'modified_rate',
       text: 'This text has a slower rate of speech.',
       voice: 'en-US-AnaNeural',
       options: { rate: '-30%' },
-      description: 'Solo rate modificado'
+      description: 'Only rate modified'
     },
     {
       name: 'modified_volume',
       text: 'This text has increased volume.',
       voice: 'en-US-AnaNeural',
       options: { volume: '120%' },
-      description: 'Solo volumen modificado'
+      description: 'Only volume modified'
     },
     {
       name: 'all_modified',
       text: 'This text has all parameters modified for a dramatic effect.',
       voice: 'en-US-AnaNeural',
       options: { pitch: '-20Hz', rate: '+25%', volume: '90%' },
-      description: 'Todos los parámetros modificados'
+      description: 'All parameters modified'
     }
   ];
 
   for (const combo of combinations) {
     try {
       log(`  🎵 ${combo.description}...`, 'yellow');
-      
+
       await tts.synthesize(combo.text, combo.voice, combo.options);
-      
+
       const outputPath = join(outputDir, combo.name);
       const finalPath = await tts.toFile(outputPath);
-      
-      // Verificar que el archivo se creó
+
+      // Verify file creation
       await access(finalPath);
-      
-      log(`    ✅ Archivo creado: ${finalPath}`, 'green');
+
+      log(`    ✅ File created: ${finalPath}`, 'green');
     } catch (error) {
-      log(`    ❌ Error en ${combo.name}: ${error instanceof Error ? error.message : error}`, 'red');
+      log(`    ❌ Error in ${combo.name}: ${error instanceof Error ? error.message : error}`, 'red');
     }
   }
 }
 
 /**
- * Test de voces disponibles
+ * Voice retrieval tests
  */
 async function testVoices(tts: EdgeTTS) {
-  log('\n🧪 Probando obtención de voces...', 'cyan');
-  
+  log('\n🧪 Testing voice retrieval...', 'cyan');
+
   try {
     const voices = await tts.getVoices();
-    log(`  ✅ Se obtuvieron ${voices.length} voces`, 'green');
-    
-    // Agrupar por idioma
+    log(`  ✅ Retrieved ${voices.length} voices`, 'green');
+
+    // Group by language
     const voicesByLocale = voices.reduce((acc, voice) => {
       const locale = voice.Locale;
       if (!acc[locale]) acc[locale] = [];
       acc[locale].push(voice);
       return acc;
     }, {} as Record<string, Voice[]>);
-    
-    log(`  📊 Idiomas disponibles: ${Object.keys(voicesByLocale).length}`, 'blue');
-    
-    // Mostrar algunos ejemplos
+
+    log(`  📊 Available languages: ${Object.keys(voicesByLocale).length}`, 'blue');
+
+    // Show some examples
     const locales = Object.keys(voicesByLocale).slice(0, 5);
     for (const locale of locales) {
       const count = voicesByLocale[locale].length;
       const example = voicesByLocale[locale][0];
-      log(`    • ${locale}: ${count} voces (ej: ${example.FriendlyName})`, 'blue');
+      log(`    • ${locale}: ${count} voices (e.g. ${example.FriendlyName})`, 'blue');
     }
-    
+
     return voices;
   } catch (error) {
-    log(`  ❌ Error al obtener voces: ${error instanceof Error ? error.message : error}`, 'red');
+    log(`  ❌ Error retrieving voices: ${error instanceof Error ? error.message : error}`, 'red');
     return [];
   }
 }
 
 /**
- * Test de diferentes formatos de salida
+ * Output format tests
  */
 async function testOutputFormats(tts: EdgeTTS, outputDir: string) {
-  log('\n🧪 Probando formatos de salida...', 'cyan');
-  
+  log('\n🧪 Testing output formats...', 'cyan');
+
   const testText = 'Testing different output formats.';
-  
+
   try {
     await tts.synthesize(testText, 'en-US-AnaNeural');
-    
-    // Test Buffer
+
+    // Buffer test
     const buffer = tts.toBuffer();
-    log(`  ✅ Buffer generado: ${buffer.length} bytes`, 'green');
-    
-    // Test Base64
+    log(`  ✅ Buffer generated: ${buffer.length} bytes`, 'green');
+
+    // Base64 test
     const base64 = tts.toBase64();
-    log(`  ✅ Base64 generado: ${base64.length} caracteres`, 'green');
-    
-    // Test Raw (alias de Base64)
+    log(`  ✅ Base64 generated: ${base64.length} characters`, 'green');
+
+    // Raw test (alias of Base64)
     const raw = tts.toRaw();
-    log(`  ✅ Raw generado: ${raw.length} caracteres`, 'green');
-    
-    // Verificar que Base64 y Raw son iguales
+    log(`  ✅ Raw generated: ${raw.length} characters`, 'green');
+
+    // Verify Base64 and Raw equality
     if (base64 === raw) {
-      log(`  ✅ Base64 y Raw son idénticos`, 'green');
+      log('  ✅ Base64 and Raw are identical', 'green');
     } else {
-      log(`  ❌ Base64 y Raw difieren`, 'red');
+      log('  ❌ Base64 and Raw differ', 'red');
     }
-    
-    // Test File
+
+    // File test
     const filePath = await tts.toFile(join(outputDir, 'format_test'));
     await access(filePath);
-    log(`  ✅ Archivo guardado: ${filePath}`, 'green');
-    
+    log(`  ✅ File saved: ${filePath}`, 'green');
+
   } catch (error) {
-    log(`  ❌ Error en test de formatos: ${error instanceof Error ? error.message : error}`, 'red');
+    log(`  ❌ Error in format tests: ${error instanceof Error ? error.message : error}`, 'red');
   }
 }
 
 /**
- * Test de diferentes voces por idioma
+ * Tests with voices from different languages
  */
 async function testMultiLanguageVoices(tts: EdgeTTS, voices: Voice[], outputDir: string) {
-  
-  log('\n🧪 Probando voces de diferentes idiomas...', 'cyan');
-  
+
+  log('\n🧪 Testing voices from different languages...', 'cyan');
+
   const languageTests = [
     { locale: 'en-US', text: 'Hello, this is English.', name: 'english_test' },
-/*     { locale: 'es-MX', text: 'Hola, esto es español.', name: 'spanish_test' },
-    { locale: 'fr-FR', text: 'Bonjour, ceci est français.', name: 'french_test' },
-    { locale: 'de-DE', text: 'Hallo, das ist Deutsch.', name: 'german_test' },
-    { locale: 'it-IT', text: 'Ciao, questo è italiano.', name: 'italian_test' },
-    { locale: 'pt-BR', text: 'Olá, isto é português.', name: 'portuguese_test' }, */
   ];
-  
+
   for (const test of languageTests) {
     const voice = voices.find(v => v.Locale.startsWith(test.locale.split('-')[0]));
-    
+
     if (voice) {
       try {
-        log(`  🗣️  Probando ${test.locale} con ${voice.FriendlyName}...`, 'yellow');
-        
+        log(`  🗣️  Testing ${test.locale} with ${voice.FriendlyName}...`, 'yellow');
+
         await tts.synthesize(test.text, voice.ShortName, {
           pitch: '+10Hz',
           rate: '0%',
           volume: '100%'
         });
-        
+
         const filePath = await tts.toFile(join(outputDir, test.name));
-        log(`    ✅ Guardado: ${filePath}`, 'green');
-        
+        log(`    ✅ Saved: ${filePath}`, 'green');
+
       } catch (error) {
-        log(`    ❌ Error con ${test.locale}: ${error instanceof Error ? error.message : error}`, 'red');
+        log(`    ❌ Error with ${test.locale}: ${error instanceof Error ? error.message : error}`, 'red');
       }
     } else {
-      log(`  ⚠️  No se encontró voz para ${test.locale}`, 'yellow');
+      log(`  ⚠️  No voice found for ${test.locale}`, 'yellow');
     }
   }
 }
 
 /**
- * Función principal mejorada
+ * Improved main function
  */
 async function main() {
-  log('🚀 Iniciando suite de tests completa para EdgeTTS...', 'bright');
-  
-  // Crear directorio de salida
+  log('🚀 Starting full test suite for EdgeTTS...', 'bright');
+
+  // Create output directory
   const outputDir = join(__dirname, 'test_output');
   try {
     await mkdir(outputDir, { recursive: true });
-    log(`📂 Directorio de tests: ${outputDir}`, 'blue');
+    log(`📂 Test directory: ${outputDir}`, 'blue');
   } catch (error) {
-    log(`❌ Error al crear directorio: ${error}`, 'red');
+    log(`❌ Error creating directory: ${error}`, 'red');
     return;
   }
-  
+
   const tts = new EdgeTTS();
-  
-  // Ejecutar todos los tests
+
+  // Execute all tests
   try {
-    // Test de voces
+    // Voice tests
     const voices = await testVoices(tts);
-    
-    // Tests de validación
+
+    // Validation tests
     await testPitchValidation(tts);
     await testRateValidation(tts);
     await testVolumeValidation(tts);
-    
-    // Tests de síntesis
+
+    // Synthesis tests
     await testSynthesisCombinations(tts, outputDir);
-    
-    // Tests de formatos
+
+    // Format tests
     await testOutputFormats(tts, outputDir);
-    
-    // Tests multi-idioma
+
+    // Multi-language tests
     if (voices.length > 0) {
       await testMultiLanguageVoices(tts, voices, outputDir);
     }
-    
-    log('\n🎉 Suite de tests completada exitosamente!', 'green');
-    log(`📁 Revisa los archivos generados en: ${outputDir}`, 'blue');
-    
+
+    log('\n🎉 Test suite completed successfully!', 'green');
+    log(`📁 Check the generated files in: ${outputDir}`, 'blue');
+
   } catch (error) {
-    log(`💥 Error fatal durante los tests: ${error}`, 'red');
+    log(`💥 Fatal error during tests: ${error}`, 'red');
   }
 }
 
-// Ejecutar tests
+// Run tests
 main().catch(error => {
-  log(`💥 Error no manejado: ${error}`, 'red');
+  log(`💥 Unhandled error: ${error}`, 'red');
   process.exit(1);
 });
