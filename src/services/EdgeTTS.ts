@@ -56,34 +56,44 @@ export class EdgeTTS {
 
     private validatePitch(pitch: string | number): string {
         if (typeof pitch === 'number') {
-            return `${pitch}Hz`;
+            return (pitch >= 0 ? `+${pitch}Hz` : `${pitch}Hz`);
         }
-        if (!/^(-?\d{1,3}Hz)$/.test(pitch)) {
-            throw new Error("Invalid pitch format. Expected format: '-100Hz to 100Hz' or a number.");
+        if (!/^[+-]?\d{1,3}(?:\.\d+)?Hz$/.test(pitch)) {
+            throw new Error("Invalid pitch format. Expected format: '-100Hz to +100Hz' or a number.");
         }
         return pitch;
     }
 
     private validateRate(rate: string | number): string {
-        if (typeof rate === 'number') {
-            return `${rate}%`;
+        let rateValue: number;
+        if (typeof rate === 'string') {
+            rateValue = parseFloat(rate.replace('%', ''));
+            if (isNaN(rateValue)) throw new Error("Invalid rate format.");
+        } else {
+            rateValue = rate;
         }
-        if (!/^(-?\d{1,3}%)$/.test(rate)) {
-            throw new Error("Invalid rate format. Expected format: '0% to 100%' or a number.");
+
+        if (rateValue >= 0) {
+            return `+${rateValue}%`;
         }
-        return rate;
+        return `${rateValue}%`;
     }
 
     private validateVolume(volume: string | number): string {
-        if (typeof volume === 'number') {
-            return `${volume}%`;
+        let volumeValue: number;
+        if (typeof volume === 'string') {
+            volumeValue = parseInt(volume.replace('%', ''), 10);
+            if (isNaN(volumeValue)) throw new Error("Invalid volume format.");
+        } else {
+            volumeValue = volume;
         }
-        if (!/^(-?\d{1,3}%)$/.test(volume)) {
-            throw new Error("Invalid volume format. Expected format: '100% to 100%' or a number.");
-        }
-        return volume;
-    }
 
+        if (volumeValue < -100 || volumeValue > 100) {
+            throw new Error("Volume cannot be negative. Expected a value from -100% to 100% (or more).");
+        }
+        
+        return `${volumeValue}%`;
+    }
     async synthesize(text: string, voice: string = 'en-US-AnaNeural', options: SynthesisOptions = {}): Promise<void> {
         return new Promise((resolve, reject) => {
             this.audio_stream = [];
