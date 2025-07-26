@@ -58,7 +58,7 @@ export class EdgeTTS {
         if (typeof pitch === 'number') {
             return (pitch >= 0 ? `+${pitch}Hz` : `${pitch}Hz`);
         }
-        if (!/^[+-]?\d{1,3}(?:\.\d+)?Hz$/.test(pitch)) { // Regex un poco más flexible
+        if (!/^[+-]?\d{1,3}(?:\.\d+)?Hz$/.test(pitch)) {
             throw new Error("Invalid pitch format. Expected format: '-100Hz to +100Hz' or a number.");
         }
         return pitch;
@@ -88,8 +88,8 @@ export class EdgeTTS {
             volumeValue = volume;
         }
 
-        if (volumeValue < 0) {
-            throw new Error("Volume cannot be negative. Expected a value from 0% to 100% (or more).");
+        if (volumeValue < -100 || volumeValue > 100) {
+            throw new Error("Volume cannot be negative. Expected a value from -100% to 100% (or more).");
         }
         
         return `${volumeValue}%`;
