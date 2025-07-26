@@ -1,13 +1,41 @@
-import WebSocket from 'ws';
+import WebSocket,{type RawData }  from 'ws'; // Importar Buffer explícitamente para claridad
 import { Constants } from '../config/constants';
-import { writeFileSync } from 'fs';
+import { writeFile } from 'fs/promises';
+import { Buffer } from 'buffer';
+export interface Voice {
+    Name: string;
+    ShortName: string;
+    Gender: string;
+    Locale: string;
+    FriendlyName: string;
+}
 
+export interface SynthesisOptions {
+    pitch?: string | number;
+    rate?: string | number;
+    volume?: string | number;
+}
+function ensureBuffer(data: RawData): Buffer {
+    if (Buffer.isBuffer(data)) {
+        return data;
+    }
+    if (data instanceof ArrayBuffer) {
+        return Buffer.from(data);
+    }
+    if (Array.isArray(data)) {
+        return Buffer.concat(data as unknown as Uint8Array[]);
+    }
+    if (typeof data === 'string') {
+        return Buffer.from(data, 'utf-8');
+    }
+    throw new Error(`Unsupported RawData type: ${typeof data}`);
+}
 export class EdgeTTS {
-    private audio_stream: any[] = [];
+    private audio_stream: Uint8Array[] = [];
     private audio_format: string = 'mp3';
     private ws!: WebSocket;
 
-    async getVoices(): Promise<any[]> {
+    async getVoices(): Promise<Voice[]> {
         const response = await fetch(`${Constants.VOICES_URL}?trustedclienttoken=${Constants.TRUSTED_CLIENT_TOKEN}`);
         const data = await response.json();
         return data.map((voice: any) => {
@@ -26,34 +54,49 @@ export class EdgeTTS {
         });
     }
 
-    private validatePitch(pitch: string): string {
+    private validatePitch(pitch: string | number): string {
+        if (typeof pitch === 'number') {
+            return `${pitch}Hz`;
+        }
         if (!/^(-?\d{1,3}Hz)$/.test(pitch)) {
-            throw new Error("Invalid pitch format. Expected format: '-100Hz to 100Hz'.");
+            throw new Error("Invalid pitch format. Expected format: '-100Hz to 100Hz' or a number.");
         }
         return pitch;
     }
 
-    private validateRate(rate: string): string {
+    private validateRate(rate: string | number): string {
+        if (typeof rate === 'number') {
+            return `${rate}%`;
+        }
         if (!/^(-?\d{1,3}%)$/.test(rate)) {
-            throw new Error("Invalid rate format. Expected format: '-100% to 100%'.");
+            throw new Error("Invalid rate format. Expected format: '-100% to 100%' or a number.");
         }
         return rate;
     }
 
-    private validateVolume(volume: string): string {
+    private validateVolume(volume: string | number): string {
+        if (typeof volume === 'number') {
+            return `${volume}%`;
+        }
         if (!/^(-?\d{1,3}%)$/.test(volume)) {
-            throw new Error("Invalid volume format. Expected format: '-100% to 100%'.");
+            throw new Error("Invalid volume format. Expected format: '-100% to 100%' or a number.");
         }
         return volume;
     }
 
-    async synthesize(text: string, voice: string = 'en-US-AnaNeural', options: any = {}): Promise<void> {
+    async synthesize(text: string, voice: string = 'en-US-AnaNeural', options: SynthesisOptions = {}): Promise<void> {
         return new Promise((resolve, reject) => {
+            this.audio_stream = [];
             const req_id = this.generateUUID();
             this.ws = new WebSocket(`${Constants.WSS_URL}?trustedclienttoken=${Constants.TRUSTED_CLIENT_TOKEN}&ConnectionId=${req_id}`);
 
             const SSML_text = this.getSSML(text, voice, options);
-
+            const timeout = setTimeout(() => {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.close();
+                }
+                reject(new Error("Synthesis timeout"));
+            }, 30000);
             this.ws.on('open', () => {
                 const message = this.buildTTSConfigMessage();
                 this.ws.send(message);
@@ -62,25 +105,33 @@ export class EdgeTTS {
                 this.ws.send(speechMessage);
             });
 
-            this.ws.on('message', (data) => {
+            this.ws.on('message', (data: RawData) => {
                 this.processAudioData(data);
             });
 
-            this.ws.on('close', () => {
-                resolve();
-            });
-
             this.ws.on('error', (err) => {
+                clearTimeout(timeout);
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.close();
+                }
                 reject(err);
+            });
+            
+            this.ws.on('close', () => {
+                clearTimeout(timeout);
+                resolve();
             });
         });
     }
 
-    private getSSML(text: string, voice: string, options: any = {}): string {
-        options.pitch = options.pitch.replace('hz', 'Hz');
-        const pitch = this.validatePitch(options.pitch || '0Hz');
-        const rate = this.validateRate(options.rate || '0%');
-        const volume = this.validateVolume(options.volume || '0%');
+    private getSSML(text: string, voice: string, options: SynthesisOptions = {}): string {
+        if (typeof options.pitch === 'string') {
+            options.pitch = options.pitch.replace('hz', 'Hz');
+        }
+        
+        const pitch = this.validatePitch(options.pitch ?? 0);
+        const rate = this.validateRate(options.rate ?? 0);
+        const volume = this.validateVolume(options.volume ?? 0);
 
         return `<speak version='1.0' xml:lang='en-US'><voice name='${voice}'><prosody pitch='${pitch}' rate='${rate}' volume='${volume}'>${text}</prosody></voice></speak>`;
     }
@@ -89,48 +140,42 @@ export class EdgeTTS {
         return `X-Timestamp:${new Date().toISOString()}Z\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n` +
             `{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":true},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`;
     }
+    private processAudioData(data: RawData): void {
+        const buffer = ensureBuffer(data);
+        const needle = Buffer.from("Path:audio\r\n");
 
-    private processAudioData(data: any): void {
-        if (Buffer.isBuffer(data)) {
-            const needle = Buffer.from("Path:audio\r\n");
+        const audioStartIndex = buffer.indexOf(new Uint8Array(needle));
+        
+        if (audioStartIndex !== -1) {
+            const audioChunk = buffer.subarray(audioStartIndex + needle.length);
+            this.audio_stream.push(new Uint8Array(audioChunk));
+        }
 
-            const uint8Data = new Uint8Array(data);
-            const start_ind = uint8Data.indexOf(needle[0]);
-
-            if (start_ind !== -1) {
-                const audioData = data.subarray(start_ind + needle.length);
-                this.audio_stream.push(audioData);
-            }
-
-            if (data.includes("Path:turn.end")) {
-                this.ws.close();
-            }
+        if (buffer.toString().includes("Path:turn.end")) {
+            this.ws?.close();
         }
     }
 
 
-
-    async toFile(outputPath: string): Promise<void> {
-        if (this.audio_stream.length) {
-            const audioBuffer = Buffer.concat(this.audio_stream);
-            const uint8Array = new Uint8Array(audioBuffer);
-            writeFileSync(`${outputPath}.${this.audio_format}`, uint8Array);
-        } else {
-            throw new Error("No audio data available to save.");
-        }
+    async toFile(outputPath: string): Promise<string> {
+        const audioBuffer = this.toBuffer(); 
+        const finalPath = `${outputPath}.${this.audio_format}`;
+        await writeFile(finalPath, new Uint8Array(audioBuffer)); 
+        
+        return finalPath;
     }
 
     toRaw(): string {
-        if (this.audio_stream.length === 0) {
-            throw new Error("No audio data available.");
-        }
-
-        const audioBuffer = Buffer.concat(this.audio_stream);
-        return audioBuffer.toString('base64');
+        return this.toBase64();
     }
 
     toBase64(): string {
-        const audioBuffer = Buffer.concat(this.audio_stream);
-        return audioBuffer.toString('base64');
+        return this.toBuffer().toString('base64');
+    }
+    toBuffer(): Buffer {
+        if (this.audio_stream.length === 0) {
+            throw new Error("No audio data available. Did you run synthesize() first?");
+        }
+        return Buffer.concat(this.audio_stream);
     }
 }

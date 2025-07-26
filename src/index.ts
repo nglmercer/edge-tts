@@ -1,1 +1,1 @@
-export { EdgeTTS } from './services/EdgeTTS';
+export { EdgeTTS,type Voice,type SynthesisOptions } from './services/EdgeTTS';
