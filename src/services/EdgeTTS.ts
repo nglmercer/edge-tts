@@ -69,7 +69,7 @@ export class EdgeTTS {
             return `${rate}%`;
         }
         if (!/^(-?\d{1,3}%)$/.test(rate)) {
-            throw new Error("Invalid rate format. Expected format: '-100% to 100%' or a number.");
+            throw new Error("Invalid rate format. Expected format: '0% to 100%' or a number.");
         }
         return rate;
     }
@@ -79,7 +79,7 @@ export class EdgeTTS {
             return `${volume}%`;
         }
         if (!/^(-?\d{1,3}%)$/.test(volume)) {
-            throw new Error("Invalid volume format. Expected format: '-100% to 100%' or a number.");
+            throw new Error("Invalid volume format. Expected format: '100% to 100%' or a number.");
         }
         return volume;
     }
