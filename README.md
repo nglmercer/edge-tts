@@ -1,4 +1,5 @@
 # Edge TTS
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/andresayac/edge-tts)
 
 **Edge TTS** is a powerful Text-to-Speech (TTS) package that leverages Microsoft's Edge capabilities. This package allows you to synthesize speech from text and manage voice options easily through a command-line interface (CLI).
 
