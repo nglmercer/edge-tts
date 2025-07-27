@@ -170,9 +170,10 @@ export class EdgeTTS {
     }
 
 
-    async toFile(outputPath: string): Promise<string> {
+    async toFile(outputPath: string,format = this.audio_format): Promise<string> {
+        if (!format || typeof format !== 'string') format = this.audio_format;
         const audioBuffer = this.toBuffer();
-        const finalPath = `${outputPath}.${this.audio_format}`;
+        const finalPath = `${outputPath}.${format}`;
         await writeFile(finalPath, new Uint8Array(audioBuffer));
 
         return finalPath;

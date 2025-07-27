@@ -177,3 +177,4 @@ dist
 
 *.mp3
 bin/
+*.wav
