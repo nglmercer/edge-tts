@@ -49,6 +49,16 @@ export class EdgeTTS {
         });
     }
 
+    async getVoicesByLanguage(locale: string): Promise<Voice[]> {
+        const voices = await this.getVoices();
+        return voices.filter(voice => voice.Locale.startsWith(locale));
+    }
+
+    async getVoicesByGender(gender: 'Male' | 'Female'): Promise<Voice[]> {
+        const voices = await this.getVoices();
+        return voices.filter(voice => voice.Gender === gender);
+    }
+
     private generateUUID(): string {
         return 'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             const r = Math.random() * 16 | 0;
@@ -153,6 +163,94 @@ export class EdgeTTS {
         return `X-Timestamp:${new Date().toISOString()}Z\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n` +
             `{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":true},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`;
     }
+
+
+    async *synthesizeStream(text: string, voice: string = 'en-US-AnaNeural', options: SynthesisOptions = {}): AsyncGenerator<Uint8Array, void, unknown> {
+        this.audio_stream = [];
+        const req_id = this.generateUUID();
+        this.ws = new WebSocket(`${Constants.WSS_URL}?trustedclienttoken=${Constants.TRUSTED_CLIENT_TOKEN}&ConnectionId=${req_id}`);
+
+        const SSML_text = this.getSSML(text, voice, options);
+
+        const queue: Uint8Array[] = [];
+        let done = false;
+        let error: Error | null = null;
+        let notify: (() => void) | null = null;
+
+        const push = (chunk: Uint8Array) => {
+            queue.push(chunk);
+            if (notify) {
+                notify();
+                notify = null;
+            }
+        };
+
+        const timeout = setTimeout(() => {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.close();
+            }
+        }, 30000);
+
+        this.ws.on('open', () => {
+            const message = this.buildTTSConfigMessage();
+            this.ws.send(message);
+
+            const speechMessage = `X-RequestId:${req_id}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${new Date().toISOString()}Z\r\nPath:ssml\r\n\r\n${SSML_text}`;
+            this.ws.send(speechMessage);
+        });
+
+        this.ws.on('message', (data: RawData) => {
+            const buffer = ensureBuffer(data);
+            const needle = Buffer.from('Path:audio\r\n');
+
+            const audioStartIndex = buffer.indexOf(new Uint8Array(needle));
+
+            if (audioStartIndex !== -1) {
+                const audioChunk = buffer.subarray(audioStartIndex + needle.length);
+                const chunk = new Uint8Array(audioChunk);
+                this.audio_stream.push(chunk);
+                push(chunk);
+            }
+
+            if (buffer.toString().includes('Path:turn.end')) {
+                this.ws?.close();
+            }
+        });
+
+        this.ws.on('error', (err: any) => {
+            error = err;
+            done = true;
+            if (notify) {
+                notify();
+                notify = null;
+            }
+        });
+
+        this.ws.on('close', () => {
+            clearTimeout(timeout);
+            done = true;
+            if (notify) {
+                notify();
+                notify = null;
+            }
+        });
+
+        while (!done || queue.length > 0) {
+            if (queue.length === 0) {
+                await new Promise<void>(resolve => (notify = resolve));
+                continue;
+            }
+            const chunk = queue.shift();
+            if (chunk) {
+                yield chunk;
+            }
+        }
+
+        if (error) {
+            throw error;
+        }
+    }
+
     private processAudioData(data: RawData): void {
         const buffer = ensureBuffer(data);
         const needle = Buffer.from("Path:audio\r\n");
@@ -169,6 +267,24 @@ export class EdgeTTS {
         }
     }
 
+    getDuration(): number {
+        if (this.audio_stream.length === 0) {
+            throw new Error("No audio data available");
+        }
+        // Estimate duration based on the size of the audio stream
+        const bufferSize = this.toBuffer().length;
+        const estimatedDuration = bufferSize / (24000 * 3); // 24000 Hz sample rate, 3 bytes per sample (16-bit stereo)
+        return estimatedDuration;
+    }
+
+    getAudioInfo(): { size: number; format: string; estimatedDuration: number } {
+        const buffer = this.toBuffer();
+        return {
+            size: buffer.length,
+            format: this.audio_format,
+            estimatedDuration: this.getDuration()
+        };
+    }
 
     async toFile(outputPath: string,format = this.audio_format): Promise<string> {
         if (!format || typeof format !== 'string') format = this.audio_format;
@@ -186,6 +302,7 @@ export class EdgeTTS {
     toBase64(): string {
         return this.toBuffer().toString('base64');
     }
+    
     toBuffer(): Buffer {
         if (this.audio_stream.length === 0) {
             throw new Error("No audio data available. Did you run synthesize() first?");

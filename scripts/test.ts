@@ -153,7 +153,7 @@ async function testSynthesisCombinations(tts: EdgeTTS, outputDir: string) {
       description: 'All parameters modified'
     }
   ];
-
+  tts
   for (const combo of combinations) {
     try {
       log(`  🎵 ${combo.description}...`, 'yellow');
