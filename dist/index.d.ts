@@ -1,0 +1,1 @@
+export { EdgeTTS, type Voice, type SynthesisOptions } from './services/EdgeTTS';
