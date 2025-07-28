@@ -1,4 +1,6 @@
+import { type RawData } from 'ws';
 import { Buffer } from 'buffer';
+import { type AudioOutputFormat } from '../config/formats';
 export interface Voice {
     Name: string;
     ShortName: string;
@@ -10,10 +12,12 @@ export interface SynthesisOptions {
     pitch?: string | number;
     rate?: string | number;
     volume?: string | number;
+    format?: AudioOutputFormat;
+    cb?: (data: RawData) => void;
 }
 export declare class EdgeTTS {
     private audio_stream;
-    private audio_format;
+    private output_format;
     private ws;
     getVoices(): Promise<Voice[]>;
     getVoicesByLanguage(locale: string): Promise<Voice[]>;
@@ -25,6 +29,7 @@ export declare class EdgeTTS {
     synthesize(text: string, voice?: string, options?: SynthesisOptions): Promise<void>;
     private getSSML;
     private buildTTSConfigMessage;
+    private getFileExtension;
     synthesizeStream(text: string, voice?: string, options?: SynthesisOptions): AsyncGenerator<Uint8Array, void, unknown>;
     private processAudioData;
     getDuration(): number;
@@ -33,7 +38,7 @@ export declare class EdgeTTS {
         format: string;
         estimatedDuration: number;
     };
-    toFile(outputPath: string, format?: string): Promise<string>;
+    toFile(outputPath: string): Promise<string>;
     toRaw(): string;
     toBase64(): string;
     toBuffer(): Buffer;

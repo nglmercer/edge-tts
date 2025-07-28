@@ -25,7 +25,7 @@ function ensureBuffer(data) {
 }
 class EdgeTTS {
     audio_stream = [];
-    audio_format = 'mp3';
+    output_format = 'audio-24khz-48kbitrate-mono-mp3';
     ws;
     async getVoices() {
         const response = await fetch(`${constants_1.Constants.VOICES_URL}?trustedclienttoken=${constants_1.Constants.TRUSTED_CLIENT_TOKEN}`);
@@ -104,13 +104,15 @@ class EdgeTTS {
                 reject(new Error("Synthesis timeout"));
             }, 30000);
             this.ws.on('open', () => {
-                const message = this.buildTTSConfigMessage();
+                const message = this.buildTTSConfigMessage(options.format);
                 this.ws.send(message);
                 const speechMessage = `X-RequestId:${req_id}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${new Date().toISOString()}Z\r\nPath:ssml\r\n\r\n${SSML_text}`;
                 this.ws.send(speechMessage);
             });
             this.ws.on('message', (data) => {
                 this.processAudioData(data);
+                if (options.cb && typeof options.cb === 'function')
+                    options.cb(data);
             });
             this.ws.on('error', (err) => {
                 clearTimeout(timeout);
@@ -134,9 +136,27 @@ class EdgeTTS {
         const volume = this.validateVolume(options.volume ?? 0);
         return `<speak version='1.0' xml:lang='en-US'><voice name='${voice}'><prosody pitch='${pitch}' rate='${rate}' volume='${volume}'>${text}</prosody></voice></speak>`;
     }
-    buildTTSConfigMessage() {
+    buildTTSConfigMessage(outputFormat = this.output_format) {
+        this.output_format = outputFormat;
+        const formattedOutput = `"${outputFormat}"`;
         return `X-Timestamp:${new Date().toISOString()}Z\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n` +
-            `{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":true},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`;
+            `{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":true},"outputFormat":${formattedOutput}}}}}`;
+    }
+    getFileExtension() {
+        const format = this.output_format;
+        if (format.includes('mp3'))
+            return 'mp3';
+        if (format.includes('riff'))
+            return 'wav';
+        if (format.includes('ogg'))
+            return 'ogg';
+        if (format.includes('webm'))
+            return 'webm';
+        if (format.includes('pcm'))
+            return 'pcm';
+        if (format.includes('truesilk'))
+            return 'silk';
+        return 'audio';
     }
     async *synthesizeStream(text, voice = 'en-US-AnaNeural', options = {}) {
         this.audio_stream = [];
@@ -234,15 +254,14 @@ class EdgeTTS {
         const buffer = this.toBuffer();
         return {
             size: buffer.length,
-            format: this.audio_format,
+            format: this.output_format,
             estimatedDuration: this.getDuration()
         };
     }
-    async toFile(outputPath, format = this.audio_format) {
-        if (!format || typeof format !== 'string')
-            format = this.audio_format;
+    async toFile(outputPath) {
         const audioBuffer = this.toBuffer();
-        const finalPath = `${outputPath}.${format}`;
+        const extension = this.getFileExtension();
+        const finalPath = `${outputPath}.${extension}`;
         await (0, promises_1.writeFile)(finalPath, new Uint8Array(audioBuffer));
         return finalPath;
     }
