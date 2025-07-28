@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { EdgeTTS } from '../services/EdgeTTS';
+import { EdgeTTS } from '../services/EdgeTTS.js';
 
 export const SynthesizeCommand = new Command('synthesize')
   .description('Edge TTS: synthesize text to audio')

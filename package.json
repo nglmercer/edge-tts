@@ -1,8 +1,9 @@
 {
-  "name": "@fork/edge-tts",
-  "version": "1.3.2",
+  "name": "@mms/edge-tts",
+  "version": "1.0.0",
   "description": "Edge TTS is a package that allows access to the online text-to-speech service used by Microsoft Edge without the need for Microsoft Edge, Windows, or an API key.",
   "main": "dist/index.js",
+  "type": "module",
   "keywords": [
     "edge",
     "tts",
@@ -13,9 +14,16 @@
   ],
   "author": "Andres Aya",
   "license": "GPL-3.0-only",
-  "homepage": "https://github.com/andresayac/edge-tts",
+  "homepage": "https://github.com/nglmercer/edge-tts/",
   "bugs": {
-    "url": "https://github.com/andresayac/edge-tts/issues"
+    "url": "https://github.com/nglmercer/edge-tts/issues"
+  },
+    "exports": {
+    ".": {
+      "import": "./dist/index.js",   
+      "require": "./dist/index.cjs", 
+      "types": "./dist/index.d.ts"   
+    }
   },
   "scripts": {
     "build": "tsc",
@@ -39,10 +47,7 @@
   "files": [
     "dist"
   ],
-  "bin": {
-    "edge-tts": "./dist/cli/edge-tts.js"
-  },
   "engines": {
-    "bun": ">=0.5.0"
+    "node": ">=18.0.0"
   }
 }

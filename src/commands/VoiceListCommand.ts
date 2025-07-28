@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { EdgeTTS } from '../services/EdgeTTS';
+import { EdgeTTS } from '../services/EdgeTTS.js';
 
 export const VoiceListCommand = new Command('voice-list')
   .description('Get the list of available voices')

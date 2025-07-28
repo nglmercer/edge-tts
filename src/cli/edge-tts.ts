@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { SynthesizeCommand } from '../commands/SynthesizeCommand';
-import { VoiceListCommand } from '../commands/VoiceListCommand';
+import { SynthesizeCommand } from '../commands/SynthesizeCommand.js';
+import { VoiceListCommand } from '../commands/VoiceListCommand.js';
 import { Command } from 'commander';
 
 const program = new Command();

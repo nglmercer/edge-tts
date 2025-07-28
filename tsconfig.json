@@ -1,30 +1,41 @@
 {
   "compilerOptions": {
-    "target": "ES2022",   
-    "lib": ["ES2022", "DOM"],
+    // --- Configuración del Output ---
+    "target": "ES2022", // Moderno y compatible con versiones recientes de Node.js.
+    "lib": ["ES2022", "DOM"], // "DOM" es necesario si tu código usa APIs del navegador (ej. en componentes React). Si es una librería solo para Node.js, quítalo.
+    "module": "NodeNext", // Genera JavaScript con sintaxis de módulos ES (import/export). Crucial para paquetes modernos.
+    "moduleResolution": "NodeNext", // Cómo TypeScript busca los módulos, alineado con el ecosistema moderno de Node.js.
 
+    // --- Generación de Archivos para Publicación ---
+    "outDir": "dist", // Carpeta donde se guardarán los archivos compilados (.js, .d.ts, .js.map).
+    "declaration": true, // ¡Esencial! Genera los archivos de definición de tipos (.d.ts). Sin esto, los usuarios de TypeScript no tendrán autocompletado.
+    "declarationMap": true, // Genera sourcemaps para los archivos .d.ts. Mejora la experiencia en el IDE ("Go to Definition" te lleva al código fuente .ts).
+    "sourceMap": true, // Genera archivos .js.map para que los usuarios puedan depurar tu código en sus proyectos.
 
-    "module": "NodeNext", 
-    "moduleResolution": "NodeNext",
-    "verbatimModuleSyntax": false,
-    "allowImportingTsExtensions": false,
-
-    "outDir": "dist",
-    "noEmit": false,    
-    "declaration": true,
-    "jsx": "react-jsx",
-
-    "strict": true,
-    "skipLibCheck": true,
+    // --- Calidad y Estrictura del Código ---
+    "jsx": "react-jsx", // Ya lo tenías, perfecto para React 17+.
+    "allowJs": true, // Permite importar archivos .js en tu proyecto .ts.
+    "strict": true, // Habilita todas las comprobaciones estrictas de tipos. ¡La mejor práctica!
+    "skipLibCheck": true, // Evita la comprobación de tipos en los archivos de declaración de las dependencias (.d.ts), acelerando la compilación.
     "noFallthroughCasesInSwitch": true,
 
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false,
-
-    "allowJs": true
+    // --- Recomendaciones para un Código más Limpio (opcional pero recomendado) ---
+    // Te sugiero cambiar estos a `true` para evitar código muerto o innecesario.
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    
+    // --- Configuración de Módulos (ya no son tan necesarios con NodeNext) ---
+    "verbatimModuleSyntax": true, // Previene problemas sutiles con la importación/exportación de tipos. Recomendado por el equipo de TS.
+    "allowImportingTsExtensions": false, // No es necesario, `NodeNext` lo maneja.
+    "noEmit": false // Asegúrate de que esté en `false` para que se generen los archivos en `outDir`.
   },
-
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  
+  // --- Archivos a Incluir/Excluir ---
+  "include": ["src/**/*"], // Incluye todos los archivos dentro de la carpeta 'src'.
+  "exclude": [
+    "node_modules", 
+    "dist", 
+    "**/*.test.ts", // Excluye archivos de prueba del build de producción.
+    "**/*.spec.ts" // Excluye archivos de especificaciones.
+  ] 
 }

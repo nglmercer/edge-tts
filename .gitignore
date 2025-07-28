@@ -178,3 +178,4 @@ out
 *.mp3
 bin/
 *.wav
+bun.lockb

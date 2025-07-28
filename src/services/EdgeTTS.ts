@@ -1,8 +1,8 @@
 import WebSocket, { type RawData } from 'ws';
-import { Constants } from '../config/constants';
+import { Constants } from '../config/constants.js';
 import { writeFile } from 'fs/promises';
 import { Buffer } from 'buffer';
-import { type AudioOutputFormat  } from '../config/formats';
+import { type AudioOutputFormat  } from '../config/formats.js';
 export interface Voice {
     Name: string;
     ShortName: string;

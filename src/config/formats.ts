@@ -60,4 +60,4 @@ type AudioOutputFormat = keyof typeof AUDIO_FORMATS_STREAM;// | keyof typeof AUD
 const ALL_AUDIO_FORMATS = { ...AUDIO_FORMATS_STREAM, ...AUDIO_FORMATS_NON_STREAM };
 
 const FORMAT_CONTENT_TYPE = new Map(Object.entries(ALL_AUDIO_FORMATS));
-export { ALL_AUDIO_FORMATS, FORMAT_CONTENT_TYPE, AudioOutputFormat };
+export { ALL_AUDIO_FORMATS, FORMAT_CONTENT_TYPE,type AudioOutputFormat };
