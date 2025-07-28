@@ -2,7 +2,7 @@ import WebSocket, { type RawData } from 'ws';
 import { Constants } from '../config/constants';
 import { writeFile } from 'fs/promises';
 import { Buffer } from 'buffer';
-
+import { type AudioOutputFormat  } from '../config/formats';
 export interface Voice {
     Name: string;
     ShortName: string;
@@ -15,6 +15,8 @@ export interface SynthesisOptions {
     pitch?: string | number;
     rate?: string | number;
     volume?: string | number;
+    format?: AudioOutputFormat;
+    cb?: (data: RawData) => void; 
 }
 
 function ensureBuffer(data: RawData): Buffer {
@@ -35,7 +37,7 @@ function ensureBuffer(data: RawData): Buffer {
 
 export class EdgeTTS {
     private audio_stream: Uint8Array[] = [];
-    private audio_format: string = 'mp3';
+    private output_format: AudioOutputFormat = 'audio-24khz-48kbitrate-mono-mp3';
     private ws!: WebSocket;
 
     async getVoices(): Promise<Voice[]> {
@@ -121,7 +123,7 @@ export class EdgeTTS {
                 reject(new Error("Synthesis timeout"));
             }, 30000);
             this.ws.on('open', () => {
-                const message = this.buildTTSConfigMessage();
+                const message = this.buildTTSConfigMessage(options.format);
                 this.ws.send(message);
 
                 const speechMessage = `X-RequestId:${req_id}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${new Date().toISOString()}Z\r\nPath:ssml\r\n\r\n${SSML_text}`;
@@ -130,6 +132,7 @@ export class EdgeTTS {
 
             this.ws.on('message', (data: RawData) => {
                 this.processAudioData(data);
+                if (options.cb && typeof options.cb === 'function') options.cb(data);
             });
 
             this.ws.on('error', (err: any) => {
@@ -159,9 +162,23 @@ export class EdgeTTS {
         return `<speak version='1.0' xml:lang='en-US'><voice name='${voice}'><prosody pitch='${pitch}' rate='${rate}' volume='${volume}'>${text}</prosody></voice></speak>`;
     }
 
-    private buildTTSConfigMessage(): string {
+    private buildTTSConfigMessage(outputFormat: AudioOutputFormat = this.output_format): string {
+        this.output_format = outputFormat;
+        const formattedOutput = `"${outputFormat}"`;
+
         return `X-Timestamp:${new Date().toISOString()}Z\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n` +
-            `{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":true},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`;
+            `{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":true},"outputFormat":${formattedOutput}}}}}`;
+    }
+    private getFileExtension(): string {
+        const format = this.output_format;
+        if (format.includes('mp3')) return 'mp3';
+        if (format.includes('riff')) return 'wav';
+        if (format.includes('ogg')) return 'ogg';
+        if (format.includes('webm')) return 'webm';
+        if (format.includes('pcm')) return 'pcm'; 
+        if (format.includes('truesilk')) return 'silk';
+
+        return 'audio';
     }
 
 
@@ -281,17 +298,17 @@ export class EdgeTTS {
         const buffer = this.toBuffer();
         return {
             size: buffer.length,
-            format: this.audio_format,
+            format: this.output_format,
             estimatedDuration: this.getDuration()
         };
     }
 
-    async toFile(outputPath: string,format = this.audio_format): Promise<string> {
-        if (!format || typeof format !== 'string') format = this.audio_format;
+    async toFile(outputPath: string): Promise<string> {
         const audioBuffer = this.toBuffer();
-        const finalPath = `${outputPath}.${format}`;
+        const extension = this.getFileExtension();
+        const finalPath = `${outputPath}.${extension}`;
+        
         await writeFile(finalPath, new Uint8Array(audioBuffer));
-
         return finalPath;
     }
 
