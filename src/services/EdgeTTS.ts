@@ -16,6 +16,7 @@ export interface SynthesisOptions {
     rate?: string | number;
     volume?: string | number;
     format?: AudioOutputFormat;
+    cb?: (data: RawData) => void;
 }
 
 function ensureBuffer(data: RawData): Buffer {
@@ -131,6 +132,7 @@ export class EdgeTTS {
 
             this.ws.on('message', (data: RawData) => {
                 this.processAudioData(data);
+                if (options.cb && typeof options.cb === 'function') options.cb(data);
             });
 
             this.ws.on('error', (err: any) => {
@@ -296,7 +298,7 @@ export class EdgeTTS {
         const buffer = this.toBuffer();
         return {
             size: buffer.length,
-            format: this.audio_format,
+            format: this.output_format,
             estimatedDuration: this.getDuration()
         };
     }
