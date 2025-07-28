@@ -179,3 +179,4 @@ out
 bin/
 *.wav
 bun.lockb
+package-lock.json
