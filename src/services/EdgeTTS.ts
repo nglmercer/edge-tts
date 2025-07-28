@@ -16,7 +16,7 @@ export interface SynthesisOptions {
     rate?: string | number;
     volume?: string | number;
     format?: AudioOutputFormat;
-    cb?: (data: RawData) => void;
+    cb?: (data: RawData) => void; 
 }
 
 function ensureBuffer(data: RawData): Buffer {
